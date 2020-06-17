@@ -27,11 +27,11 @@ export default {
   /*
    ** Plugins to load before mounting the App
    */
-  plugins: ['@/plugins/element-ui'],
+  plugins: ['@/plugins/element-ui', '@/plugins/vue-lazyload'],
   /*
    ** Nuxt.js dev-modules
    */
-  buildModules: ['@nuxt/typescript-build'],
+  buildModules: ['@nuxt/typescript-build', '@aceforth/nuxt-optimized-images'],
   /*
    ** Nuxt.js modules
    */
@@ -47,6 +47,12 @@ export default {
    ** See https://axios.nuxtjs.org/options
    */
   axios: {},
+  /*
+   ** Nuxt Optimzed Images Build
+   */
+  optimizedImages: {
+    optimizeImages: true,
+  },
   /*
    ** Build configuration
    */
