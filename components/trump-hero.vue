@@ -51,7 +51,7 @@ export default {
   object-fit: cover;
   object-position: 65% 20%;
   filter: blur(25px);
-  transform: scale(1.05);
+  transform: scale(1.1);
   transition: filter 0.5s ease-out, transform 0.5s ease-out;
 }
 
