@@ -33,19 +33,33 @@
     >
       How Donald Trump's tweets impact the stock markets.
     </p>
+    <tweet
+      v-observe-visibility="{
+        callback: visibilityChanged,
+        intersection: {
+          rootMargin: '20px',
+          threshold: 0.3,
+          once: true,
+        },
+      }"
+      class="hidden"
+    />
   </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import { ObserveVisibility } from 'vue-observe-visibility'
+import Tweet from '~/components/tweet.vue'
 
 Vue.directive('observe-visibility', ObserveVisibility)
 
 export default {
   name: 'TrumpHero',
+  components: { Tweet },
   methods: {
     visibilityChanged(visible: boolean, entry: any) {
+      console.log(entry)
       visible
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
@@ -66,7 +80,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 20px;
+  padding: 40px;
 }
 
 .lazy-stretch {
@@ -98,14 +112,14 @@ h1 {
   font-size: 48px;
 }
 
-h1,
-p {
+h1 {
   transition: transform 0.5s 0.5s cubic-bezier(0, 0, 0.2, 1),
     opacity 0.5s 0.5s cubic-bezier(0, 0, 0.2, 1);
 }
 
 p {
-  animation-delay: 0.6s;
+  transition: transform 0.5s 0.6s cubic-bezier(0, 0, 0.2, 1),
+    opacity 0.5s 0.6s cubic-bezier(0, 0, 0.2, 1);
 }
 
 h1.hidden,
