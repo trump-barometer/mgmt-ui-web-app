@@ -7,16 +7,50 @@
         :data-loading="require('~/assets/trump.jpg?lqip')"
       />
     </div>
-    <h1>
+    <h1
+      v-observe-visibility="{
+        callback: visibilityChanged,
+        intersection: {
+          rootMargin: '20px',
+          threshold: 0.3,
+          once: true,
+        },
+      }"
+      class="hidden"
+    >
       The impact of covfefe and co.
     </h1>
-    <p>How Donald Trump's tweets impact the stock markets.</p>
+    <p
+      v-observe-visibility="{
+        callback: visibilityChanged,
+        intersection: {
+          rootMargin: '20px',
+          threshold: 0.3,
+          once: true,
+        },
+      }"
+      class="hidden"
+    >
+      How Donald Trump's tweets impact the stock markets.
+    </p>
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
+import { ObserveVisibility } from 'vue-observe-visibility'
+
+Vue.directive('observe-visibility', ObserveVisibility)
+
 export default {
   name: 'TrumpHero',
+  methods: {
+    visibilityChanged(visible: boolean, entry: any) {
+      visible
+        ? entry.target.classList.remove('hidden')
+        : entry.target.classList.add('hidden')
+    },
+  },
 }
 </script>
 
@@ -62,25 +96,21 @@ export default {
 
 h1 {
   font-size: 48px;
-  animation: fade-in-text 1s cubic-bezier(0, 0, 0.2, 1);
+}
+
+h1,
+p {
+  transition: transform 0.5s 0.5s cubic-bezier(0, 0, 0.2, 1),
+    opacity 0.5s 0.5s cubic-bezier(0, 0, 0.2, 1);
 }
 
 p {
-  animation: fade-in-text 1.1s cubic-bezier(0, 0, 0.2, 1);
+  animation-delay: 0.6s;
 }
 
-@keyframes fade-in-text {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  50% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+h1.hidden,
+p.hidden {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>
