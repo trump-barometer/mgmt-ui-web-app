@@ -13,8 +13,8 @@
         intersection: {
           rootMargin: '20px',
           threshold: 0.3,
-          once: true,
         },
+        once: true,
       }"
       class="hidden"
     >
@@ -26,12 +26,12 @@
         intersection: {
           rootMargin: '20px',
           threshold: 0.3,
-          once: true,
         },
+        once: true,
       }"
       class="hidden"
     >
-      How Donald Trump's tweets impact the stock markets.
+      How Donald Trump's tweets influence the stock markets.
     </p>
     <tweet
       v-observe-visibility="{
@@ -39,9 +39,10 @@
         intersection: {
           rootMargin: '20px',
           threshold: 0.3,
-          once: true,
         },
+        once: true,
       }"
+      :tweet="tweets[0]"
       class="hidden"
     />
   </div>
@@ -51,15 +52,25 @@
 import Vue from 'vue'
 import { ObserveVisibility } from 'vue-observe-visibility'
 import Tweet from '~/components/tweet.vue'
+import { Moment } from '~/node_modules/moment'
 
 Vue.directive('observe-visibility', ObserveVisibility)
+
+interface Tweet {
+  time: Moment
+  text: string
+}
 
 export default {
   name: 'TrumpHero',
   components: { Tweet },
+  computed: {
+    tweets(): Tweet[] {
+      return (this as any).$store.state.tweets.list
+    },
+  },
   methods: {
     visibilityChanged(visible: boolean, entry: any) {
-      console.log(entry)
       visible
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
@@ -69,18 +80,13 @@ export default {
 </script>
 
 <style scoped>
+.tweet {
+  margin-top: 48px;
+}
+
 .tile {
-  position: relative;
-  width: 100%;
-  height: calc(80vh - 120px);
-  min-height: 600px;
-  overflow: hidden !important;
-  flex-grow: 1;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  padding: 40px;
+  height: calc(100vh - 100px);
 }
 
 .lazy-stretch {
@@ -91,6 +97,7 @@ export default {
   bottom: 0;
   z-index: -1;
   user-select: none;
+  overflow: hidden !important;
 }
 
 .lazy-stretch > img {

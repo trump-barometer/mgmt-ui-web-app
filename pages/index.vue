@@ -11,6 +11,7 @@
       </el-row>
     </el-header>
     <trump-hero />
+    <timeline />
     <el-footer>
       Footer
     </el-footer>
@@ -20,15 +21,28 @@
 <script lang="ts">
 import Vue from 'vue'
 import TrumpHero from '~/components/trump-hero.vue'
+import Timeline from '~/components/timeline.vue'
 
 export default Vue.extend({
   components: {
+    Timeline,
     TrumpHero,
   },
 })
 </script>
 
 <style>
+.tile {
+  position: relative;
+  width: 100%;
+  min-height: 600px;
+  flex-grow: 1;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 40px;
+}
+
 .title {
   font-size: 18px;
   line-height: 1.5;

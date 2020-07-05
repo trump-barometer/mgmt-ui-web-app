@@ -57,7 +57,7 @@ export default {
    ** Build configuration
    */
   build: {
-    transpile: [/^element-ui/],
+    transpile: [/^element-ui/, 'vue-echarts', 'resize-detector'],
     /*
      ** You can extend webpack config here
      */

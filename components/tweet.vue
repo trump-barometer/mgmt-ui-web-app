@@ -18,19 +18,36 @@
       </a>
     </div>
     <div class="content">
-      BIG COURT WIN against Bolton. Obviously, with the book already given out
-      and leaked to many people and the media, nothing the highly respected
-      Judge could have done about stopping it...BUT, strong & powerful
-      statements & rulings on MONEY & on BREAKING CLASSIFICATION were made....
+      {{ tweet.text }}
     </div>
-    <div class="time">20. June 2020, 17:40</div>
+    <div class="time" :title="getTimeStringFull(tweet.time)">
+      {{ getTimeString(tweet.time) }}
+    </div>
     <div class="measures"></div>
   </div>
 </template>
 
 <script lang="ts">
+import moment from 'moment'
+import { PropOptions } from '~/node_modules/vue'
+interface Tweet {
+  time: string
+  text: string
+  id: string
+}
 export default {
-  name: 'tweet',
+  name: 'Tweet',
+  props: {
+    tweet: { type: Object, required: true } as PropOptions<Tweet>,
+  },
+  methods: {
+    getTimeString(time: string) {
+      return moment(time).fromNow()
+    },
+    getTimeStringFull(time: string) {
+      return moment(time).toString()
+    },
+  },
 }
 </script>
 
@@ -41,8 +58,8 @@ export default {
   border-radius: 20px;
   color: #000000;
   max-width: 600px;
-  box-shadow: 0 3px 20px rgba(0, 0, 0, 0.2);
-  margin-top: 100px;
+  /*box-shadow: 0 3px 20px rgba(0, 0, 0, 0.2);*/
+  border: 1px solid #dddddd;
   transition: transform 0.5s 1s cubic-bezier(0, 0, 0.2, 1),
     opacity 0.5s 1s cubic-bezier(0, 0, 0.2, 1);
 }
