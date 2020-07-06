@@ -1,21 +1,28 @@
 <template>
   <div class="tweet">
-    <div class="header">
-      <a
-        href="https://twitter.com/realDonaldTrump"
-        target="_blank"
-        class="avatar-link"
-      >
-        <img :src="require('~/assets/avatar.jpg')" alt="Trump" class="avatar" />
-      </a>
-      <a
-        href="https://twitter.com/realDonaldTrump"
-        target="_blank"
-        class="name-link"
-      >
-        <span class="name">Donald J. Trump</span>
-        <span class="tag">@realDonaldTrump</span>
-      </a>
+    <div class="header-outer">
+      <div class="header">
+        <a
+          href="https://twitter.com/realDonaldTrump"
+          target="_blank"
+          class="avatar-link"
+        >
+          <img
+            :src="require('~/assets/avatar.jpg')"
+            alt="Trump"
+            class="avatar"
+          />
+        </a>
+        <a
+          href="https://twitter.com/realDonaldTrump"
+          target="_blank"
+          class="name-link"
+        >
+          <span class="name">Donald J. Trump</span>
+          <span class="tag">@realDonaldTrump</span>
+        </a>
+      </div>
+      <div v-if="showId" class="id">{{ tweet.id }}</div>
     </div>
     <div class="content">
       {{ tweet.text }}
@@ -39,6 +46,9 @@ export default {
   name: 'Tweet',
   props: {
     tweet: { type: Object, required: true } as PropOptions<Tweet>,
+    showId: { type: Boolean, required: false, default: false } as PropOptions<
+      boolean
+    >,
   },
   methods: {
     getTimeString(time: string) {
@@ -69,10 +79,16 @@ export default {
   transform: translateY(20px);
 }
 
+.header-outer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
 .header {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
 }
 
 .avatar-link,
@@ -113,5 +129,14 @@ export default {
 
 .time {
   margin-top: 10px;
+}
+
+.id {
+  color: #666666;
+}
+
+.id::before {
+  content: '# ';
+  color: #999999;
 }
 </style>

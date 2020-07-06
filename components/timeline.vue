@@ -11,7 +11,7 @@
       }"
       class="hidden"
     >
-      A glympse at Trump's tweets and their impact {{ visibleTweets }}
+      A glympse at Trump's tweets and their impact
     </h1>
     <div
       v-observe-visibility="{
@@ -40,6 +40,7 @@
             },
           }"
           :tweet="tweet"
+          :show-id="true"
         ></Tweet>
       </div>
       <div class="chart">
@@ -81,7 +82,7 @@ export default {
       return (this as any).$store.state.tweets.list
     },
     chartOptions(): any {
-      const tweets = (this as any).$store.state.tweets.list
+      const tweets = (this as any).$store.state.tweets.list as Tweet[]
       const [from, to] = (this as any).getBounds(
         tweets,
         (this as any).visibleTweets
@@ -94,12 +95,16 @@ export default {
           text: 'S&P 500',
           subtext: 'Stock data by NYSE',
         },
+        grid: {
+          left: 80,
+          right: 20,
+        },
         tooltip: {
           trigger: 'axis',
         },
         dataZoom: [
           {
-            type: 'inside',
+            type: 'slider',
             startValue: fromMoment.subtract(additionalBound).toISOString(),
             endValue: toMoment.add(additionalBound).toISOString(),
           },
@@ -145,10 +150,10 @@ export default {
               ['2020-06-17T21:22:33Z', 17],
             ],
             markPoint: {
-              data: [
-                { coord: ['2012-03-03T12:22:33Z', 5], name: '最大值' },
-                { coord: ['2012-03-02T13:22:33Z', 15], name: '最小值' },
-              ],
+              data: tweets.map((tweet) => ({
+                coord: [tweet.time, 0],
+                value: tweet.id,
+              })),
             },
             areaStyle: {
               color: new graphic.LinearGradient(0, 0, 0, 1, [
@@ -268,5 +273,11 @@ h1.hidden,
   position: sticky;
   top: 0;
   max-height: 100vh;
+  margin-left: 40px;
+}
+
+.echarts {
+  width: 100%;
+  height: calc(100% - 200px);
 }
 </style>
