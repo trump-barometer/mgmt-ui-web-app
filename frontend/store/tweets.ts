@@ -49,4 +49,14 @@ export const state = () => ({
   ] as Tweet[],
 })
 
-export const mutations = {}
+export const mutations = {
+  setTweets(state: {list: Tweet[]}, payload: Tweet[]) {
+    state.list = payload
+  }
+}
+
+export const actions = {
+  async getTweets({commit}: any): Promise<void> {
+    commit('setTweets', [])
+  }
+}

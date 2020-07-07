@@ -17,6 +17,7 @@
         once: true,
       }"
       class="hidden"
+      @click="getTweets"
     >
       The impact of covfefe and co.
     </h1>
@@ -34,6 +35,7 @@
       How Donald Trump's tweets influence the stock markets.
     </p>
     <tweet
+      v-if="tweets[0]"
       v-observe-visibility="{
         callback: visibilityChanged,
         intersection: {
@@ -74,6 +76,9 @@ export default {
       visible
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
+    },
+    getTweets() {
+      ;(this as any).$store.dispatch('tweets/getTweets')
     },
   },
 }
