@@ -7,17 +7,19 @@
     "dev": "tsnd --respawn app.ts",
     "build": "tsc",
     "start": "node dist/app.js",
-    "lint": "eslint *.ts"
+    "lint": "eslint *.ts --fix"
   },
   "author": "Daniel",
   "license": "ISC",
   "dependencies": {
+    "eslint-plugin-import": "^2.22.0",
     "express": "^4.17.1"
   },
   "devDependencies": {
     "@types/express": "^4.17.7",
     "@types/node": "^14.0.20",
     "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.0.5",
