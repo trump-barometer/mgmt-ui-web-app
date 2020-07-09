@@ -1,6 +1,7 @@
 <template>
   <div class="tile">
-    <h1
+    <div
+      class="title-bar hidden"
       v-observe-visibility="{
         callback: visibilityChanged,
         intersection: {
@@ -9,10 +10,15 @@
         },
         once: true,
       }"
-      class="hidden"
     >
-      A glympse at Trump's tweets and their impact
-    </h1>
+      <h1>
+        A glympse at Trump's tweets and their impact
+      </h1>
+      <el-radio-group class="btn-group" size="small" v-model="tweetFilter">
+        <el-radio-button label="All tweets"></el-radio-button>
+        <el-radio-button label="Impactful"></el-radio-button>
+      </el-radio-group>
+    </div>
     <div
       v-observe-visibility="{
         callback: visibilityChanged,
@@ -60,12 +66,8 @@ import moment from 'moment'
 import Vue from 'vue'
 import { ObserveVisibility } from 'vue-observe-visibility'
 import Tweet from '~/components/tweet.vue'
+import { Tweet as TweetType } from '~/types/tweet'
 import { Moment } from '~/node_modules/moment'
-interface Tweet {
-  time: string
-  text: string
-  id: string
-}
 
 Vue.component('v-chart', ECharts)
 Vue.directive('observe-visibility', ObserveVisibility)
@@ -75,14 +77,20 @@ export default {
   data() {
     return {
       visibleTweets: [],
+      tweetFilter: 'All tweets',
     }
   },
   computed: {
-    tweets(): Tweet[] {
-      return (this as any).$store.state.tweets.list
+    tweets(): TweetType[] {
+      const tweets = (this as any).$store.state.tweets.list as TweetType[]
+      if ((this as any).tweetFilter === 'Impactful') {
+        return tweets.filter((tweet) => tweet.impactful)
+      } else {
+        return tweets
+      }
     },
     chartOptions(): any {
-      const tweets = (this as any).$store.state.tweets.list as Tweet[]
+      const tweets = (this as any).tweets
       const [from, to] = (this as any).getBounds(
         tweets,
         (this as any).visibleTweets
@@ -150,20 +158,26 @@ export default {
               ['2020-06-17T21:22:33Z', 17],
             ],
             markPoint: {
-              data: tweets.map((tweet) => ({
+              data: tweets.map((tweet: TweetType) => ({
                 coord: [tweet.time, 0],
                 value: tweet.id,
               })),
+            },
+            lineStyle: {
+              color: 'rgb(0, 100, 128)',
+            },
+            itemStyle: {
+              color: 'rgb(0, 100, 128)',
             },
             areaStyle: {
               color: new graphic.LinearGradient(0, 0, 0, 1, [
                 {
                   offset: 0,
-                  color: 'rgb(255, 158, 68)',
+                  color: 'rgb(0, 100, 128)',
                 },
                 {
                   offset: 1,
-                  color: 'rgb(255, 70, 131)',
+                  color: 'rgb(255, 255, 255)',
                 },
               ]),
             },
@@ -173,7 +187,7 @@ export default {
     },
   },
   watch: {
-    tweets(newValue: Tweet[]): void {
+    tweets(newValue: TweetType[]): void {
       Vue.set(
         this,
         'visibleTweets',
@@ -202,7 +216,7 @@ export default {
         )
       }
     },
-    getBounds(tweets: Tweet[], visibleTweets: string[]): [Moment, Moment] {
+    getBounds(tweets: TweetType[], visibleTweets: string[]): [Moment, Moment] {
       if (!visibleTweets.length) {
         if (tweets.length) {
           return [
@@ -227,22 +241,48 @@ export default {
   color: #333;
 }
 
-h1 {
+.title-bar {
   transition: transform 0.5s 0.3s cubic-bezier(0, 0, 0.2, 1),
     opacity 0.5s 0.3s cubic-bezier(0, 0, 0.2, 1);
   position: sticky;
   top: 0;
+  pointer-events: none;
   padding: 40px;
   margin: -40px -40px 0;
   background: rgb(255, 255, 255);
   background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 1) 60%,
-    rgba(255, 255, 255, 0.75) 80%,
-    rgba(255, 255, 255, 0) 100%
+    hsl(0, 0%, 100%) 50%,
+    hsla(0, 0%, 100%, 0.738) 59.5%,
+    hsla(0, 0%, 100%, 0.541) 64%,
+    hsla(0, 0%, 100%, 0.382) 73.5%,
+    hsla(0, 0%, 100%, 0.278) 75.75%,
+    hsla(0, 0%, 100%, 0.194) 82.5%,
+    hsla(0, 0%, 100%, 0.126) 86.5%,
+    hsla(0, 0%, 100%, 0.075) 90.1%,
+    hsla(0, 0%, 100%, 0.042) 93.05%,
+    hsla(0, 0%, 100%, 0.021) 95.5%,
+    hsla(0, 0%, 100%, 0.008) 97.6%,
+    hsla(0, 0%, 100%, 0.002) 99.1%,
+    hsla(0, 0%, 100%, 0) 100%
   );
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title-bar > * {
+  pointer-events: all;
+}
+
+.btn-group {
+  margin-left: 20px;
+}
+
+h1 {
+  margin: 0;
+  color: #333333;
+  text-shadow: 0 0 1px #ffffff;
 }
 
 .split {
@@ -250,8 +290,7 @@ h1 {
     opacity 0.5s 0.5s cubic-bezier(0, 0, 0.2, 1);
 }
 
-h1.hidden,
-.split.hidden {
+.hidden {
   opacity: 0;
   transform: translateY(20px);
 }
