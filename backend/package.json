@@ -1,0 +1,27 @@
+{
+  "name": "mgmt-ui-backend",
+  "version": "1.0.0",
+  "description": "Trump Barometer UI Backend",
+  "main": "app.ts",
+  "scripts": {
+    "dev": "tsnd --respawn app.ts",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "lint": "eslint *.ts"
+  },
+  "author": "Daniel",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.7",
+    "@types/node": "^14.0.20",
+    "eslint": "^7.4.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.0.5",
+    "ts-node-dev": "^1.0.0-pre.51",
+    "typescript": "^3.9.6"
+  }
+}

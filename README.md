@@ -1,8 +1,8 @@
 # mgmt-ui-web-app
 
-> Trumop Barometer Web UI
+> Trump Barometer Web UI
 
-## Build Setup
+## Build UI
 
 ```bash
 # install dependencies
@@ -20,3 +20,13 @@ $ npm run generate
 ```
 
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
+
+## Build Backend
+
+```bash
+# install dependencies
+$ npm install
+
+# serve with live reload on port 3000
+$ npm run dev
+```
