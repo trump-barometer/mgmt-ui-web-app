@@ -4,7 +4,7 @@
   "description": "Trump Barometer UI Backend",
   "main": "app.ts",
   "scripts": {
-    "dev": "tsnd --respawn app.ts",
+    "dev": "tsnd --respawn app.ts --watch ./src",
     "build": "tsc",
     "start": "node dist/app.js",
     "lint": "eslint *.ts --fix"
@@ -12,6 +12,8 @@
   "author": "Daniel",
   "license": "ISC",
   "dependencies": {
+    "@types/dotenv": "^8.2.0",
+    "dotenv": "^8.2.0",
     "eslint-plugin-import": "^2.22.0",
     "express": "^4.17.1"
   },
