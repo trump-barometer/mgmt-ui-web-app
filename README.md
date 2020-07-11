@@ -23,10 +23,25 @@ For detailed explanation on how things work, check out [Nuxt.js docs](https://nu
 
 ## Build Backend
 
+First, create a .env like this:
+```
+db_host=...
+db_port=...
+db_user=...
+db_pw=...
+db_name=...
+
+```
+
+Then use the commands to run the application
 ```bash
 # install dependencies
 $ npm install
 
 # serve with live reload on port 3000
 $ npm run dev
+
+# build for production and launch server
+$ npm run build
+$ npm run start
 ```
