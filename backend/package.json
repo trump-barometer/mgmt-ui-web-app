@@ -4,7 +4,7 @@
   "description": "Trump Barometer UI Backend",
   "main": "app.ts",
   "scripts": {
-    "dev": "tsnd --respawn app.ts --watch ./src",
+    "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/app.js",
     "lint": "eslint *.ts --fix"
@@ -21,13 +21,15 @@
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.7",
+    "@types/mongodb": "^3.5.25",
     "@types/node": "^14.0.20",
     "eslint": "^7.4.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-prettier": "^3.1.4",
+    "nodemon": "^2.0.4",
     "prettier": "^2.0.5",
-    "ts-node-dev": "^1.0.0-pre.51",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.6"
   }
 }
