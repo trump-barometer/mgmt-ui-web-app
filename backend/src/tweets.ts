@@ -9,19 +9,19 @@ const router = express.Router()
 router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) => {
   const mongoClient = req.dbClient.mongoClient
   try {
-    if (!req.query.predictionmodel){
-      req.query.predictionmodel = <string[]> [];
+    if (!req.query.predictionmodels){
+      req.query.predictionmodels = <string[]> [];
     } else {
-      assert(Array.isArray(req.query.predictionmodel),'only give arrays as predictionmodel filter' )
-      req.query.predictionmodel = <string[]> req.query.predictionmodel;
+      assert(Array.isArray(req.query.predictionmodels),'only give arrays as predictionmodels filter' )
+      req.query.predictionmodels = <string[]> req.query.predictionmodels;
     }
 
     assert(!req.query.from || !Array.isArray(req.query.from), 'only give 1 from parameter')
     assert(!req.query.to|| !Array.isArray(req.query.to), 'only give 1 to parameter')
 
     const predictionprojection: any = {};
-    if (req.query.predictionmodel.length > 0) {
-      req.query.predictionmodel.forEach(model => predictionprojection['predictions.'+model] = 1)
+    if (req.query.predictionmodels.length > 0) {
+      req.query.predictionmodels.forEach(model => predictionprojection['predictions.'+model] = 1)
     } else {
       predictionprojection['predictions']= 1;
     }
@@ -36,8 +36,8 @@ console.log(moment.utc().toISOString())
               { 'tweet.full_text': { '$not': /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/ } },
             ],
           },
-          req.query.predictionmodel.length > 0 ? {
-            '$or':  req.query.predictionmodel.map(predictionmodel => {
+          req.query.predictionmodels.length > 0 ? {
+            '$or':  req.query.predictionmodels.map(predictionmodel => {
               const newFilter: any = {}
               newFilter['predictions.'+predictionmodel] =  {'$exists': true}
               return newFilter
