@@ -1,7 +1,6 @@
 <template>
   <div class="tile">
     <div
-      class="title-bar hidden"
       v-observe-visibility="{
         callback: visibilityChanged,
         intersection: {
@@ -10,14 +9,26 @@
         },
         once: true,
       }"
+      class="title-bar hidden"
     >
       <h1>
         A glympse at Trump's tweets and their impact
       </h1>
-      <el-radio-group class="btn-group" size="small" v-model="tweetFilter">
-        <el-radio-button label="All tweets"></el-radio-button>
-        <el-radio-button label="Impactful"></el-radio-button>
-      </el-radio-group>
+      <div>
+        <el-radio-group v-model="tweetFilter" class="btn-group" size="small">
+          <el-radio-button label="All tweets"></el-radio-button>
+          <el-radio-button label="Impactful"></el-radio-button>
+        </el-radio-group>
+        <el-select v-model="selectedIndice" placeholder="Index" size="small">
+          <el-option
+            v-for="item in indices"
+            :key="item"
+            :label="item"
+            :value="item"
+          >
+          </el-option>
+        </el-select>
+      </div>
     </div>
     <div
       v-observe-visibility="{
@@ -78,9 +89,13 @@ export default {
     return {
       visibleTweets: [],
       tweetFilter: 'All tweets',
+      selectedIndice: '^GDAXI',
     }
   },
   computed: {
+    indices(): string[] {
+      return Object.keys((this as any).$store.state.stock.stockData)
+    },
     tweets(): TweetType[] {
       const tweets = (this as any).$store.state.tweets.list as TweetType[]
       if ((this as any).tweetFilter === 'Impactful') {
@@ -91,18 +106,24 @@ export default {
     },
     chartOptions(): any {
       const tweets = (this as any).tweets
-      const [from, to] = (this as any).getBounds(
+      let [from, to]: [Moment, Moment] = (this as any).getBounds(
         tweets,
         (this as any).visibleTweets
       )
-      const fromMoment = moment(from)
-      const toMoment = moment(to)
-      const additionalBound = toMoment.diff(fromMoment) * 0.2 || 100000000
+      const additionalBound = to.diff(from) * 0.2 || 100000000
+      from = (this as any).getNextQuarter(from.subtract(additionalBound), true)
+      to = (this as any).getNextQuarter(to.add(additionalBound), false)
+      const fromIso = from.toISOString()
+      const toIso = to.toISOString()
+      const stockData = (this as any).$store.state.stock.stockData[
+        (this as any).selectedIndice
+      ]
+        .filter((value: any) => value.time >= fromIso && value.time <= toIso)
+        .map((value: any) => [value.time, value.value])
+      const visibleTweetObjects = (this as any).visibleTweets
+        .map((i: number) => tweets[i])
+        .filter((tweet: TweetType) => !!tweet)
       return {
-        title: {
-          text: 'S&P 500',
-          subtext: 'Stock data by NYSE',
-        },
         grid: {
           left: 80,
           right: 20,
@@ -110,16 +131,8 @@ export default {
         tooltip: {
           trigger: 'axis',
         },
-        dataZoom: [
-          {
-            type: 'slider',
-            startValue: fromMoment.subtract(additionalBound).toISOString(),
-            endValue: toMoment.add(additionalBound).toISOString(),
-          },
-          {},
-        ],
         xAxis: {
-          type: 'time',
+          type: 'category',
           boundaryGap: false,
           splitLine: {
             show: false,
@@ -143,23 +156,13 @@ export default {
           {
             name: 'S&P 500',
             type: 'line',
-            data: [
-              ['2020-06-17T10:22:33Z', 11],
-              ['2020-06-17T11:27:33Z', 11],
-              ['2020-06-17T12:22:33Z', 15],
-              ['2020-06-17T13:22:33Z', 13],
-              ['2020-06-17T14:22:33Z', 12],
-              ['2020-06-17T15:22:33Z', 11],
-              ['2020-06-17T16:22:33Z', 14],
-              ['2020-06-17T17:22:33Z', 13],
-              ['2020-06-17T18:22:33Z', 16],
-              ['2020-06-17T19:22:33Z', 16],
-              ['2020-06-17T20:22:33Z', 15],
-              ['2020-06-17T21:22:33Z', 17],
-            ],
+            data: stockData,
             markPoint: {
-              data: tweets.map((tweet: TweetType) => ({
-                coord: [tweet.time, 0],
+              data: visibleTweetObjects.map((tweet: TweetType) => ({
+                coord: [
+                  tweet.adjustedTime,
+                  (this as any).getStockValue(tweet.adjustedTime, stockData),
+                ],
                 value: tweet.id,
               })),
             },
@@ -231,6 +234,13 @@ export default {
         .filter((tweet) => visibleTweets.includes(tweet.id))
         .map((tweet) => moment(tweet.time))
       return [moment.min(filteredMoments), moment.max(filteredMoments)]
+    },
+    getNextQuarter(time: Moment, preferEarly: boolean) {
+      const remainder = time.minute() % 15
+      return time.add((preferEarly ? 0 : 15) - remainder, 'minutes')
+    },
+    getStockValue(adjustedTime: string, stockData: [string, number][]): number {
+      return stockData.find(([time]) => time === adjustedTime)?.[1] || 0
     },
   },
 }

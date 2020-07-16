@@ -79,6 +79,7 @@ export default {
     },
     getTweets() {
       ;(this as any).$store.dispatch('tweets/getTweets')
+      return (this as any).$store.dispatch('stock/getData')
     },
   },
 }

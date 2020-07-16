@@ -1,4 +1,5 @@
 import { Tweet } from '~/types/tweet'
+import * as moment from '~/node_modules/moment';
 
 export const state = () => ({
   list: [
@@ -63,7 +64,23 @@ export const mutations = {
 }
 
 export const actions = {
-  getTweets({ commit }: any): void {
-    commit('setTweets', [])
+  async getTweets({ commit }: any): Promise<void> {
+    const tweets: any[] = ((await (this as any).$axios.$get(
+      'http://localhost:3001/tweets'
+    )) as any[]).map(({ tweet }, i) => {
+      const time = moment.utc(tweet.created_at);
+      return {
+        id: i + 1,
+        nativeId: tweet.id,
+        text: tweet.full_text,
+        time,
+        adjustedTime: moment
+          .utc(time)
+          .subtract(time.minute() % 15, 'minutes')
+          .startOf('hour')
+          .toISOString(),
+      }
+    })
+    commit('setTweets', tweets.slice(0, 50))
   },
 }

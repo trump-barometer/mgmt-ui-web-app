@@ -6,7 +6,7 @@ import { DbClient } from './src/lib/dbclient'
 
 dotenv.config();
 const app = express();
-const port = 3000;
+const port = 3001;
 
 app.use('/tweets', DbClient.openDbConnection, tweetRouter, DbClient.closeDbConnection);
 app.use('/indices', DbClient.openDbConnection, indicesRouter, DbClient.closeDbConnection);
