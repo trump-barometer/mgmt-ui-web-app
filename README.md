@@ -30,11 +30,13 @@ db_port=...
 db_user=...
 db_pw=...
 db_name=...
-
+port=...    --> optional!
 ```
 
 Then use the commands to run the application
 ```bash
+# to make the frontend available via backend generate the ui first like described above!
+
 # install dependencies
 $ npm install
 
