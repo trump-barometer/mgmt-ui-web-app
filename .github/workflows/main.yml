@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: executing remote ssh commands using password
+    - name: do deployment using ssh
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.HOST }}
@@ -20,5 +20,14 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
-          whoami
-          ls -al
+          cd ~/webserver/mgmt-ui-web-app
+          forever stop backend/dist/app.js
+          git fetch --all
+          git reset --hard origin/master
+          cd frontend
+          npm install
+          npm run generate
+          cd ../backend
+          npm install
+          npm run build
+          forever start dist/app.js
