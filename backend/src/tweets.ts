@@ -26,7 +26,6 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
       predictionprojection['predictions']= 1;
     }
 
-console.log(moment.utc().toISOString())
     const result = await mongoClient.db().collection('tweets')
       .find({
         '$and': [
@@ -55,7 +54,6 @@ console.log(moment.utc().toISOString())
         },
       })
       .toArray();
-    console.log(moment.utc().toISOString())
     res.json(
       result
         .map(element => {
@@ -100,6 +98,23 @@ router.get('/predictionmodels', async (req: EnhancedRequest, res: Response, next
         [])
       .reduce((prev, cur) => prev.concat(cur), [])
       .filter((value, index, array) => array.indexOf(value) === index && value.length !== 0),
+    )
+    next()
+  } catch (e) {
+    res.json(e)
+    next()
+  }
+})
+
+router.get('/timestamps', async (req: EnhancedRequest, res: Response, next: NextFunction) => {
+  const mongoClient = req.dbClient.mongoClient
+  try {
+    const result = await mongoClient.db().collection('tweets')
+      .distinct('tweet.created_at')
+    res.json(result
+      .map(element => moment.utc(element, 'ddd MMM DD HH:mm:ss Z YYYY'))
+      .sort((a, b) => a.isBefore(b) ? -1 : 1)
+      .map(element => element.toISOString()),
     )
     next()
   } catch (e) {
