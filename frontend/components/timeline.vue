@@ -35,30 +35,39 @@
         callback: visibilityChanged,
         intersection: {
           rootMargin: '20px',
-          threshold: 0.1,
         },
         once: true,
       }"
       class="split hidden"
     >
       <div class="tweets">
-        <Tweet
-          v-for="tweet in tweets"
-          :key="tweet.id"
+        <RecycleScroller
+          v-slot="{ item }"
+          class="scroller"
+          :items="tweets"
+          :item-size="256"
+          key-field="id"
+          page-mode
+          :emit-update="true"
+          @update="setVisibleTweets"
+        >
+          <div>
+            <Tweet :item="item"></Tweet>
+          </div>
+        </RecycleScroller>
+        <el-button
+          v-loading="loading"
           v-observe-visibility="{
-            callback: (...args) => tweetVisibilityChanged(...args, tweet.id),
-            intersection: {
-              rootMargin: '20px',
-              threshold: 0.1,
-            },
+            callback: loadMoreData,
             throttle: 10000,
             throttleOptions: {
               leading: 'both',
             },
           }"
-          :tweet="tweet"
-          :show-id="true"
-        ></Tweet>
+          class="loading-button"
+        >
+          Load more
+        </el-button>
       </div>
       <div class="chart">
         <client-only>
@@ -76,20 +85,24 @@ import { graphic } from 'echarts'
 import moment from 'moment'
 import Vue from 'vue'
 import { ObserveVisibility } from 'vue-observe-visibility'
+import { RecycleScroller } from 'vue-virtual-scroller'
 import Tweet from '~/components/tweet.vue'
 import { Tweet as TweetType } from '~/types/tweet'
 import { Moment } from '~/node_modules/moment'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 Vue.component('v-chart', ECharts)
+Vue.component('recycle-scroller', RecycleScroller)
 Vue.directive('observe-visibility', ObserveVisibility)
 export default {
   name: 'Timeline',
-  components: { Tweet },
+  components: { Tweet, RecycleScroller },
   data() {
     return {
-      visibleTweets: [],
+      visibleTweets: null,
       tweetFilter: 'All tweets',
-      selectedIndice: '^GDAXI',
+      selectedIndice: 'NDX',
+      loading: false,
     }
   },
   computed: {
@@ -106,11 +119,15 @@ export default {
     },
     chartOptions(): any {
       const tweets = (this as any).tweets
+      const visibleTweets = tweets.slice(
+        (this as any).visibleTweets?.start || 0,
+        (this as any).visibleTweets?.end || 0
+      )
       let [from, to]: [Moment, Moment] = (this as any).getBounds(
         tweets,
-        (this as any).visibleTweets
+        visibleTweets
       )
-      const additionalBound = to.diff(from) * 0.2 || 100000000
+      const additionalBound = Math.max(to.diff(from) * 0.2, 40000000)
       from = (this as any).getNextQuarter(from.subtract(additionalBound), true)
       to = (this as any).getNextQuarter(to.add(additionalBound), false)
       const fromIso = from.toISOString()
@@ -120,9 +137,10 @@ export default {
       ]
         .filter((value: any) => value.time >= fromIso && value.time <= toIso)
         .map((value: any) => [value.time, value.value])
-      const visibleTweetObjects = (this as any).visibleTweets
-        .map((i: number) => tweets[i])
-        .filter((tweet: TweetType) => !!tweet)
+      const chartVisibleTweets = tweets.filter(
+        (tweet: TweetType) =>
+          tweet.adjustedTime >= fromIso && tweet.adjustedTime <= toIso
+      )
       return {
         grid: {
           left: 80,
@@ -133,6 +151,16 @@ export default {
         },
         xAxis: {
           type: 'category',
+          axisLabel: {
+            formatter: (value: string) =>
+              moment.utc(value).format('YYYY-MM-DD HH:mm'),
+          },
+          axisPointer: {
+            label: {
+              formatter: ({ value }: { value: string }) =>
+                moment.utc(value).format('YYYY-MM-DD HH:mm'),
+            },
+          },
           boundaryGap: false,
           splitLine: {
             show: false,
@@ -151,14 +179,15 @@ export default {
           splitLine: {
             show: false,
           },
+          scale: true,
         },
         series: [
           {
-            name: 'S&P 500',
+            name: (this as any).selectedIndice,
             type: 'line',
             data: stockData,
             markPoint: {
-              data: visibleTweetObjects.map((tweet: TweetType) => ({
+              data: chartVisibleTweets.map((tweet: TweetType) => ({
                 coord: [
                   tweet.adjustedTime,
                   (this as any).getStockValue(tweet.adjustedTime, stockData),
@@ -189,37 +218,21 @@ export default {
       }
     },
   },
-  watch: {
-    tweets(newValue: TweetType[]): void {
-      Vue.set(
-        this,
-        'visibleTweets',
-        (this as any).visibleTweets.filter((id: string) =>
-          newValue.find((tweet) => tweet.id === id)
-        )
-      )
-    },
-  },
   methods: {
     visibilityChanged(visible: boolean, entry: any): void {
       visible
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
     },
-    tweetVisibilityChanged(visible: boolean, _entry: any, id: string): void {
-      if (visible && !(this as any).visibleTweets.includes(id)) {
-        Vue.set(this, 'visibleTweets', [...(this as any).visibleTweets, id])
-      } else if (!visible && (this as any).visibleTweets.includes(id)) {
-        Vue.set(
-          this,
-          'visibleTweets',
-          (this as any).visibleTweets.filter(
-            (innerId: string) => innerId !== id
-          )
-        )
+    loadMoreData(visible: boolean): void {
+      if (visible && !(this as any).loading) {
+        ;(this as any).loading = true
       }
     },
-    getBounds(tweets: TweetType[], visibleTweets: string[]): [Moment, Moment] {
+    getBounds(
+      tweets: TweetType[],
+      visibleTweets: TweetType[]
+    ): [Moment, Moment] {
       if (!visibleTweets.length) {
         if (tweets.length) {
           return [
@@ -230,10 +243,10 @@ export default {
           return [moment(), moment()]
         }
       }
-      const filteredMoments = tweets
-        .filter((tweet) => visibleTweets.includes(tweet.id))
-        .map((tweet) => moment(tweet.time))
-      return [moment.min(filteredMoments), moment.max(filteredMoments)]
+      return [
+        moment.utc(visibleTweets[0].time),
+        moment.utc(visibleTweets[visibleTweets.length - 1].time),
+      ]
     },
     getNextQuarter(time: Moment, preferEarly: boolean) {
       const remainder = time.minute() % 15
@@ -241,6 +254,9 @@ export default {
     },
     getStockValue(adjustedTime: string, stockData: [string, number][]): number {
       return stockData.find(([time]) => time === adjustedTime)?.[1] || 0
+    },
+    setVisibleTweets(start: number, end: number) {
+      Vue.set(this, 'visibleTweets', { start, end })
     },
   },
 }
@@ -305,8 +321,12 @@ h1 {
   transform: translateY(20px);
 }
 
-.tweet:not(:last-child) {
+.tweet {
   margin-bottom: 16px;
+}
+
+.tweets {
+  flex-basis: 600px;
 }
 
 .split {

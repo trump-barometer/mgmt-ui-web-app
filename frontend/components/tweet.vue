@@ -22,13 +22,13 @@
           <span class="tag">@realDonaldTrump</span>
         </a>
       </div>
-      <div v-if="showId" class="id">{{ tweet.id }}</div>
+      <div v-if="!hideId" class="id">{{ item.id }}</div>
     </div>
     <div class="content">
-      {{ tweet.text }}
+      {{ item.text }}
     </div>
-    <div class="time" :title="getTimeStringFull(tweet.time)">
-      {{ getTimeString(tweet.time) }}
+    <div class="time" :title="getTimeStringFull(item.time)">
+      {{ getTimeString(item.time) }}
     </div>
     <div class="measures"></div>
   </div>
@@ -45,8 +45,8 @@ interface Tweet {
 export default {
   name: 'Tweet',
   props: {
-    tweet: { type: Object, required: true } as PropOptions<Tweet>,
-    showId: { type: Boolean, required: false, default: false } as PropOptions<
+    item: { type: Object, required: true } as PropOptions<Tweet>,
+    hideId: { type: Boolean, required: false, default: false } as PropOptions<
       boolean
     >,
   },
@@ -68,10 +68,17 @@ export default {
   border-radius: 20px;
   color: #000000;
   max-width: 600px;
+  height: 240px;
+  display: flex;
+  flex-direction: column;
   /*box-shadow: 0 3px 20px rgba(0, 0, 0, 0.2);*/
   border: 1px solid #dddddd;
   transition: transform 0.5s 1s cubic-bezier(0, 0, 0.2, 1),
     opacity 0.5s 1s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.content {
+  flex: 1;
 }
 
 .tweet.hidden {

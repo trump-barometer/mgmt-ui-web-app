@@ -17,7 +17,6 @@
         once: true,
       }"
       class="hidden"
-      @click="getTweets"
     >
       The impact of covfefe and co.
     </h1>
@@ -44,7 +43,8 @@
         },
         once: true,
       }"
-      :tweet="tweets[0]"
+      :item="tweets[0]"
+      :hide-id="true"
       class="hidden"
     />
   </div>
@@ -76,10 +76,6 @@ export default {
       visible
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
-    },
-    getTweets() {
-      ;(this as any).$store.dispatch('tweets/getTweets')
-      return (this as any).$store.dispatch('stock/getData')
     },
   },
 }

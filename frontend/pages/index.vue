@@ -1,15 +1,5 @@
 <template>
   <el-container>
-    <el-header>
-      <el-row type="flex" justify="space-between">
-        <span class="title">Trump Barometer</span>
-        <el-menu mode="horizontal">
-          <el-menu-item index="1">Start</el-menu-item>
-          <el-menu-item index="2">Twitter Timeline</el-menu-item>
-          <el-menu-item index="3">Impress</el-menu-item>
-        </el-menu>
-      </el-row>
-    </el-header>
     <trump-hero />
     <timeline />
     <el-footer>
@@ -28,6 +18,7 @@ export default Vue.extend({
     Timeline,
     TrumpHero,
   },
+  middleware: 'fill-data',
 })
 </script>
 
