@@ -25,7 +25,7 @@ export const actions = {
   ): Promise<void> {
     const offset = state.list.length
     const tweets: any[] = ((await (this as any).$axios.$get(
-      `http${process.env.port === '443' ? 's' : ''}://localhost:${
+      `http${process.env.port === '443' ? 's' : ''}://${process.env.hostname}:${
         process.env.port
       }/tweets`,
       { params: { from, to } }

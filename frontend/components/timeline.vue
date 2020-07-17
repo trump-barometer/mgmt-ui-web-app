@@ -232,9 +232,8 @@ export default {
         const to = start.toISOString()
         const from = start
           .clone()
-          .subtract(7, 'days')
+          .subtract(3, 'days')
           .toISOString()
-        console.log((this as any).$store.state.tweets, to, from)
         await Promise.all([
           (this as any).$store.dispatch('tweets/getTweets', { to, from }),
           await (this as any).$store.dispatch('stock/getData', { to, from }),

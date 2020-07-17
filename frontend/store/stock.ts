@@ -30,9 +30,8 @@ export const actions = {
     { commit }: any,
     { from, to }: { from: string; to: string }
   ): Promise<void> {
-    console.log(from, to)
     const data: any[] = (await (this as any).$axios.$get(
-      `http${process.env.port === '443' ? 's' : ''}://localhost:${
+      `http${process.env.port === '443' ? 's' : ''}://${process.env.hostname}:${
         process.env.port
       }/indices`,
       { params: { from, to } }

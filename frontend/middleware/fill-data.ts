@@ -8,7 +8,7 @@ export default function({ store }: { store: any }) {
   const to = toMoment.toISOString()
   const from = toMoment
     .clone()
-    .subtract(7, 'days')
+    .subtract(3, 'days')
     .toISOString()
   return Promise.all([
     store.dispatch('tweets/getTweets', { from, to }),
