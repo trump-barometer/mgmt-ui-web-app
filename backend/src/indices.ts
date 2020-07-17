@@ -39,7 +39,7 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
           'indize.low': 1,
         },
       })
-      .sort({ 'indize.timestamp': 1, 'indize.symbol': 1 })
+      .sort({ 'indize.timestamp': -1, 'indize.symbol': 1 })
       .toArray())
     res.json(
       result.map(element => {
@@ -63,6 +63,7 @@ router.get('/indexnames', async (req: EnhancedRequest, res: Response, next: Next
     const result = (await mongoClient.db()
       .collection('indizes')
       .distinct('indize.symbol'))
+      .sort()
     res.json(result.map(element => element.replace('^', '')))
     next()
   } catch (e) {

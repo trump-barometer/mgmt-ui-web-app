@@ -70,7 +70,7 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
             (!req.query.from || moment.utc(<string> req.query.from).isSameOrBefore(element.timestamp))
               && (!req.query.to || moment.utc(<string> req.query.to).isAfter(element.timestamp))
         )
-        .sort((a, b) => a.timestamp.isBefore(b.timestamp) ? -1 : 1),
+        .sort((a, b) => a.timestamp.isAfter(b.timestamp) ? -1 : 1),
     )
     next()
   } catch (e) {
@@ -97,7 +97,8 @@ router.get('/predictionmodels', async (req: EnhancedRequest, res: Response, next
           .reduce((prev, cur) => prev.concat(cur), []):
         [])
       .reduce((prev, cur) => prev.concat(cur), [])
-      .filter((value, index, array) => array.indexOf(value) === index && value.length !== 0),
+      .filter((value, index, array) => array.indexOf(value) === index && value.length !== 0)
+      .sort()
     )
     next()
   } catch (e) {
@@ -113,7 +114,7 @@ router.get('/timestamps', async (req: EnhancedRequest, res: Response, next: Next
       .distinct('tweet.created_at')
     res.json(result
       .map(element => moment.utc(element, 'ddd MMM DD HH:mm:ss Z YYYY'))
-      .sort((a, b) => a.isBefore(b) ? -1 : 1)
+      .sort((a, b) => a.isAfter(b) ? -1 : 1)
       .map(element => element.toISOString()),
     )
     next()
