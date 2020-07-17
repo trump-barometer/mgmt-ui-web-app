@@ -68,7 +68,7 @@ export default {
       config.plugins.push(
         new DefinePlugin({
           'process.env': JSON.stringify(
-            dotenv.config({ path: './../.env' }).parsed
+            dotenv.config({ path: './.env' }).parsed
           ),
         })
       )
