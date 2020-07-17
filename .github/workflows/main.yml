@@ -8,7 +8,7 @@ on:
 
 jobs:
   install:
-    
+
     runs-on: ubuntu-latest
 
     steps:
@@ -21,7 +21,6 @@ jobs:
         port: ${{ secrets.PORT }}
         script: |
           cd ~/webserver/mgmt-ui-web-app
-          forever stop backend/dist/app.js
           git fetch --all
           git reset --hard origin/master
           cd frontend
@@ -30,4 +29,5 @@ jobs:
           cd ../backend
           npm install
           npm run build
+          forever stop dist/app.js
           forever start dist/app.js

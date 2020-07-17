@@ -2,6 +2,18 @@
 
 > Trump Barometer Web UI
 
+
+First, create a .env like this in the root of the repo:
+```
+db_host=...
+db_port=...
+db_user=...
+db_pw=...
+db_name=...
+port=...    --> optional!
+```
+It will be used by both the frontend and backend
+
 ## Build UI
 
 ```bash
@@ -22,16 +34,6 @@ $ npm run generate
 For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
 
 ## Build Backend
-
-First, create a .env like this:
-```
-db_host=...
-db_port=...
-db_user=...
-db_pw=...
-db_name=...
-port=...    --> optional!
-```
 
 Then use the commands to run the application
 ```bash

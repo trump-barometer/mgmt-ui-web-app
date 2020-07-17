@@ -5,7 +5,7 @@ import { indicesRouter } from './src/indices'
 import { DbClient } from './src/lib/dbclient'
 import * as path from 'path'
 
-dotenv.config();
+dotenv.config({path: './../.env'});
 const app = express();
 const port = process.env.port || 3001;
 
