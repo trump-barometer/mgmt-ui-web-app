@@ -4,18 +4,38 @@ export const state = () => ({
   stockData: {
     NDX: [],
   },
+  from: null,
+  to: null,
 })
 
 export const mutations = {
-  setStockData(state: any, payload: any) {
-    state.stockData = payload
+  setStockData(
+    state: any,
+    {
+      indices,
+      from,
+      to,
+    }: { indices: { [key: string]: any[] }; from: string; to: string }
+  ) {
+    for (const [key, entries] of Object.entries(indices)) {
+      state.stockData[key] = [...entries, ...(state.stockData[key] || [])]
+    }
+    state.from = [state.from, from].sort()[0]
+    state.to = [state.to, to].sort()[1]
   },
 }
 
 export const actions = {
-  async getData({ commit }: any): Promise<void> {
+  async getData(
+    { commit }: any,
+    { from, to }: { from: string; to: string }
+  ): Promise<void> {
+    console.log(from, to)
     const data: any[] = (await (this as any).$axios.$get(
-      'http://localhost:3001/indices'
+      `http${process.env.port === '443' ? 's' : ''}://localhost:${
+        process.env.port
+      }/indices`,
+      { params: { from, to } }
     )) as any[]
     const indices: { [key: string]: any[] } = {}
     for (const point of data) {
@@ -27,6 +47,6 @@ export const actions = {
         value: point.value,
       })
     }
-    commit('setStockData', indices)
+    commit('setStockData', { indices, from, to })
   },
 }

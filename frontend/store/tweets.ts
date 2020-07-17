@@ -3,24 +3,38 @@ import * as moment from '~/node_modules/moment'
 
 export const state = () => ({
   list: [] as Tweet[],
+  from: null,
+  to: null,
 })
 
 export const mutations = {
-  setTweets(state: { list: Tweet[] }, payload: Tweet[]) {
-    state.list = payload
+  addTweets(
+    state: { list: Tweet[]; from: string; to: string },
+    { tweets, from, to }: { tweets: Tweet[]; from: string; to: string }
+  ) {
+    state.list = [...state.list, ...tweets]
+    state.from = [state.from, from].sort()[0]
+    state.to = [state.to, to].sort()[1]
   },
 }
 
 export const actions = {
-  async getTweets({ commit }: any): Promise<void> {
+  async getTweets(
+    { commit, state }: any,
+    { from, to }: { from: string; to: string }
+  ): Promise<void> {
+    const offset = state.list.length
     const tweets: any[] = ((await (this as any).$axios.$get(
-      'http://localhost:3001/tweets'
+      `http${process.env.port === '443' ? 's' : ''}://localhost:${
+        process.env.port
+      }/tweets`,
+      { params: { from, to } }
     )) as any[])
       .reverse()
       .map((tweet, i) => {
         const time = moment.utc(tweet.timestamp)
         return {
-          id: i + 1,
+          id: i + 1 + offset,
           nativeId: tweet.id,
           text: tweet.text,
           time,
@@ -31,6 +45,6 @@ export const actions = {
             .toISOString(),
         }
       })
-    commit('setTweets', tweets)
+    commit('addTweets', { tweets, from, to })
   },
 }

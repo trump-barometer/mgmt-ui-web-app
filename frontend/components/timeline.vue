@@ -49,6 +49,7 @@
           key-field="id"
           page-mode
           :emit-update="true"
+          :buffer="400"
           @update="setVisibleTweets"
         >
           <div>
@@ -127,7 +128,7 @@ export default {
         tweets,
         visibleTweets
       )
-      const additionalBound = Math.max(to.diff(from) * 0.2, 40000000)
+      const additionalBound = Math.max(to.diff(from) * 0.2, 20000000)
       from = (this as any).getNextQuarter(from.subtract(additionalBound), true)
       to = (this as any).getNextQuarter(to.add(additionalBound), false)
       const fromIso = from.toISOString()
@@ -224,9 +225,21 @@ export default {
         ? entry.target.classList.remove('hidden')
         : entry.target.classList.add('hidden')
     },
-    loadMoreData(visible: boolean): void {
+    async loadMoreData(visible: boolean): Promise<void> {
       if (visible && !(this as any).loading) {
         ;(this as any).loading = true
+        const start = moment.utc((this as any).$store.state.tweets.from)
+        const to = start.toISOString()
+        const from = start
+          .clone()
+          .subtract(7, 'days')
+          .toISOString()
+        console.log((this as any).$store.state.tweets, to, from)
+        await Promise.all([
+          (this as any).$store.dispatch('tweets/getTweets', { to, from }),
+          await (this as any).$store.dispatch('stock/getData', { to, from }),
+        ])
+        ;(this as any).loading = false
       }
     },
     getBounds(

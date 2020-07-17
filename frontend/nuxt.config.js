@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+import { DefinePlugin } from 'webpack'
 export default {
   mode: 'universal',
   /*
@@ -62,6 +64,14 @@ export default {
      ** You can extend webpack config here
      */
     // extend(config, ctx) {}
-    extend() {},
+    extend(config) {
+      config.plugins.push(
+        new DefinePlugin({
+          'process.env': JSON.stringify(
+            dotenv.config({ path: './../.env' }).parsed
+          ),
+        })
+      )
+    },
   },
 }
