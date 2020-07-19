@@ -49,11 +49,10 @@
           key-field="id"
           page-mode
           :emit-update="true"
-          :buffer="400"
           @update="setVisibleTweets"
         >
           <div>
-            <Tweet :item="item"></Tweet>
+            <Tweet :item="item" :index="selectedIndice"></Tweet>
           </div>
         </RecycleScroller>
         <el-button
@@ -138,10 +137,11 @@ export default {
       ]
         .filter((value: any) => value.time >= fromIso && value.time <= toIso)
         .map((value: any) => [value.time, value.value])
+      /* Currently not used ad data granularity is low
       const chartVisibleTweets = tweets.filter(
         (tweet: TweetType) =>
           tweet.adjustedTime >= fromIso && tweet.adjustedTime <= toIso
-      )
+      ) */
       return {
         grid: {
           left: 80,
@@ -188,13 +188,52 @@ export default {
             type: 'line',
             data: stockData,
             markPoint: {
-              data: chartVisibleTweets.map((tweet: TweetType) => ({
-                coord: [
-                  tweet.adjustedTime,
-                  (this as any).getStockValue(tweet.adjustedTime, stockData),
-                ],
-                value: tweet.id,
-              })),
+              data: [].concat(
+                ...visibleTweets.map((tweet: TweetType) => {
+                  const tweetMark = {
+                    coord: [
+                      tweet.adjustedTime,
+                      (this as any).getStockValue(
+                        tweet.adjustedTime,
+                        stockData
+                      ),
+                    ],
+                    value: tweet.id,
+                  }
+                  if (tweet.predictions) {
+                    return [
+                      tweetMark,
+                      {
+                        coord: [
+                          tweet.adjustedTime,
+                          (this as any).getStockValue(
+                            tweet.adjustedTime,
+                            stockData
+                          ),
+                        ],
+                        symbol:
+                          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                        itemStyle: {
+                          color: 'transparent',
+                        },
+                        symbolOffset: ['15px', '-80%'],
+                        label: {
+                          fontFamily: 'element-icons',
+                          color: '#333333',
+                        },
+                        value:
+                          tweet.predictions.deep_learning.bert[
+                            '^' + (this as any).selectedIndice
+                          ].result === 'Up'
+                            ? ''
+                            : '',
+                      },
+                    ]
+                  } else {
+                    return [tweetMark]
+                  }
+                })
+              ),
             },
             lineStyle: {
               color: 'rgb(0, 100, 128)',
