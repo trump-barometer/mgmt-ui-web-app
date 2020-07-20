@@ -17,7 +17,8 @@
       <div>
         <el-radio-group v-model="tweetFilter" class="btn-group" size="small">
           <el-radio-button label="All tweets"></el-radio-button>
-          <el-radio-button label="Impactful"></el-radio-button>
+          <el-radio-button label="Correct prediction"></el-radio-button>
+          <el-radio-button label="Wrong prediction"></el-radio-button>
         </el-radio-group>
         <el-select v-model="selectedIndice" placeholder="Index" size="small">
           <el-option
@@ -60,7 +61,6 @@
           v-loading="loading"
           v-observe-visibility="{
             callback: loadMoreData,
-            throttle: 10000,
             intersection: {
               rootMargin: '1000px',
             },
@@ -69,7 +69,7 @@
             },
           }"
           class="loading-button"
-          :click="loadMoreData"
+          @click="loadMoreData"
         >
           Load more
         </el-button>
@@ -120,10 +120,23 @@ export default {
     },
     tweets(): TweetType[] {
       const tweets = (this as any).$store.state.tweets.list as TweetType[]
-      if ((this as any).tweetFilter === 'Impactful') {
-        return tweets.filter((tweet) => tweet.impactful)
-      } else {
+      const tweetFilter = (this as any).tweetFilter
+      if (tweetFilter === 'All tweets') {
         return tweets
+      } else {
+        return tweets.filter((tweet) => {
+          const prediction =
+            // eslint-disable-next-line camelcase
+            tweet.predictions?.deep_learning?.bert[
+              '^' + (this as any).selectedIndice
+            ]
+          if (!prediction) {
+            return false
+          }
+          return tweetFilter === 'Correct prediction'
+            ? prediction.ground_truth === prediction.result
+            : prediction.ground_truth !== prediction.result
+        })
       }
     },
     chartOptions(): any {
