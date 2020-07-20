@@ -61,6 +61,9 @@
           v-observe-visibility="{
             callback: loadMoreData,
             throttle: 10000,
+            intersection: {
+              rootMargin: '1000px',
+            },
             throttleOptions: {
               leading: 'both',
             },
@@ -92,6 +95,7 @@ import Tweet from '~/components/tweet.vue'
 import { Tweet as TweetType } from '~/types/tweet'
 import { Moment } from '~/node_modules/moment'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
+import { StockData } from '~/types/stock-data'
 
 Vue.component('v-chart', ECharts)
 Vue.component('recycle-scroller', RecycleScroller)
@@ -123,7 +127,12 @@ export default {
       }
     },
     chartOptions(): any {
-      const tweets = (this as any).tweets
+      const tweets = (this as any).adjustTweetsToMarketHours(
+        (this as any).tweets,
+        (this as any).$store.state.stock.indexedDates[
+          (this as any).selectedIndice
+        ] || {}
+      )
       const visibleTweets = tweets.slice(
         (this as any).visibleTweets?.start || 0,
         (this as any).visibleTweets?.end || 0
@@ -137,20 +146,23 @@ export default {
       to = (this as any).getNextQuarter(to.add(additionalBound), false)
       const fromIso = from.toISOString()
       const toIso = to.toISOString()
-      const stockData = (this as any).$store.state.stock.stockData[
+      const filteredStockData = ((this as any).$store.state.stock.stockData[
         (this as any).selectedIndice
-      ]
-        .filter((value: any) => value.time >= fromIso && value.time <= toIso)
-        .map((value: any) => [value.time, value.value])
+      ] as StockData[]).filter(
+        (value: any) => value.time >= fromIso && value.time <= toIso
+      )
+      const chartStockData = filteredStockData.map((value) => [
+        value.time,
+        value.value,
+      ])
+      const chartBacktestingData = filteredStockData
+        .filter((value) => typeof value.backtesting.bert === 'number')
+        .map((value: any) => [value.time, value.backtesting.bert])
       const chartVisibleTweets = tweets.filter(
         (tweet: TweetType) =>
           tweet.adjustedTime >= fromIso && tweet.adjustedTime <= toIso
       )
       return {
-        grid: {
-          left: 80,
-          right: 20,
-        },
         tooltip: {
           trigger: 'axis',
         },
@@ -171,72 +183,74 @@ export default {
             show: false,
           },
         },
-        yAxis: {
-          type: 'value',
-          axisLabel: {
-            formatter: '{value} $',
+        yAxis: [
+          {
+            type: 'value',
+            name: (this as any).selectedIndice,
+            axisLabel: {
+              formatter: '{value}',
+            },
+            axisPointer: {
+              label: {
+                formatter: '{value}',
+              },
+            },
+            splitLine: {
+              show: false,
+            },
+            scale: true,
           },
-          axisPointer: {
-            label: {
+          {
+            type: 'value',
+            name: 'Virtual Invest',
+            axisLabel: {
               formatter: '{value} $',
             },
+            axisPointer: {
+              label: {
+                formatter: '{value} $',
+              },
+            },
+            splitLine: {
+              show: false,
+            },
+            scale: true,
           },
-          splitLine: {
-            show: false,
-          },
-          scale: true,
-        },
+        ],
         series: [
+          {
+            name: 'Virtual invest',
+            type: 'line',
+            yAxisIndex: 1,
+            data: chartBacktestingData,
+            lineStyle: {
+              color: 'rgba(0, 0, 0, 0.2)',
+            },
+            itemStyle: {
+              color: 'rgba(0, 0, 0, 0.2)',
+            },
+            areaStyle: {
+              color: new graphic.LinearGradient(0, 0, 0, 1, [
+                {
+                  offset: 0,
+                  color: 'rgba(0, 0, 0, 0.2)',
+                },
+                {
+                  offset: 1,
+                  color: 'rgba(0, 0, 0, 0)',
+                },
+              ]),
+            },
+          },
           {
             name: (this as any).selectedIndice,
             type: 'line',
-            data: stockData,
+            yAxisIndex: 0,
+            data: chartStockData,
             markPoint: {
-              data: [].concat(
-                ...chartVisibleTweets.map((tweet: TweetType) => {
-                  const tweetMark = {
-                    coord: [
-                      tweet.adjustedTime,
-                      (this as any).getStockValue(
-                        tweet.adjustedTime,
-                        stockData
-                      ),
-                    ],
-                    value: tweet.id,
-                  }
-                  if (tweet.predictions) {
-                    return [
-                      tweetMark,
-                      {
-                        coord: [
-                          tweet.adjustedTime,
-                          (this as any).getStockValue(
-                            tweet.adjustedTime,
-                            stockData
-                          ),
-                        ],
-                        symbol:
-                          'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-                        itemStyle: {
-                          color: 'transparent',
-                        },
-                        symbolOffset: ['15px', '-80%'],
-                        label: {
-                          fontFamily: 'element-icons',
-                          color: '#333333',
-                        },
-                        value:
-                          tweet.predictions.deep_learning.bert[
-                            '^' + (this as any).selectedIndice
-                          ].result === 'Up'
-                            ? ''
-                            : '',
-                      },
-                    ]
-                  } else {
-                    return [tweetMark]
-                  }
-                })
+              data: (this as any).generateTweetMarks(
+                chartVisibleTweets,
+                chartStockData
               ),
             },
             lineStyle: {
@@ -253,7 +267,7 @@ export default {
                 },
                 {
                   offset: 1,
-                  color: 'rgb(255, 255, 255)',
+                  color: 'rgba(0, 100, 128, 0)',
                 },
               ]),
             },
@@ -312,6 +326,96 @@ export default {
     },
     setVisibleTweets(start: number, end: number) {
       Vue.set(this, 'visibleTweets', { start, end })
+    },
+    adjustTweetsToMarketHours(
+      tweets: TweetType[],
+      indexedDates: { [key: string]: number }
+    ): TweetType[] {
+      const timestamps = Object.keys(indexedDates)
+      return tweets.map((tweet) => {
+        if (indexedDates[tweet.adjustedTime]) {
+          return tweet
+        } else {
+          return {
+            ...tweet,
+            adjustedTime:
+              timestamps.find((timestamp) => timestamp > tweet.adjustedTime) ||
+              '9999-12-31T00:00:00.000Z',
+          }
+        }
+      })
+    },
+    generateTweetMarks(
+      tweets: TweetType[],
+      stockData: [string, number][]
+    ): any[] {
+      interface TweetTypeReduced extends TweetType {
+        sameTimeUntilId?: string
+        prediction: number
+      }
+      const adjustedTweets: TweetTypeReduced[] = tweets.map((tweet) => ({
+        ...tweet,
+        prediction: 0,
+      }))
+      const reducedTweets = adjustedTweets.reduce<TweetTypeReduced[]>(
+        (list, tweet) => {
+          const sameAdjustedTimeTweet = list.find(
+            (reducedTweet) => reducedTweet.adjustedTime === tweet.adjustedTime
+          )
+          if (sameAdjustedTimeTweet) {
+            return list.map((reducedTweet) =>
+              reducedTweet === sameAdjustedTimeTweet
+                ? { ...reducedTweet, sameTimeUntilId: tweet.id }
+                : reducedTweet
+            )
+          } else {
+            return [...list, tweet]
+          }
+        },
+        [] as TweetTypeReduced[]
+      )
+      return ([] as any[]).concat(
+        ...reducedTweets.map((tweet: TweetTypeReduced) => {
+          const tweetMark = {
+            coord: [
+              tweet.adjustedTime,
+              (this as any).getStockValue(tweet.adjustedTime, stockData),
+            ],
+            value: tweet.sameTimeUntilId
+              ? `${tweet.id}-${tweet.sameTimeUntilId}`
+              : tweet.id,
+          }
+          if (tweet.predictions) {
+            return [
+              tweetMark,
+              {
+                coord: [
+                  tweet.adjustedTime,
+                  (this as any).getStockValue(tweet.adjustedTime, stockData),
+                ],
+                symbol:
+                  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+                itemStyle: {
+                  color: 'transparent',
+                },
+                symbolOffset: ['15px', '-80%'],
+                label: {
+                  fontFamily: 'element-icons',
+                  color: '#333333',
+                },
+                value:
+                  tweet.predictions.deep_learning?.bert?.[
+                    '^' + (this as any).selectedIndice
+                  ]?.result === 'Up'
+                    ? ''
+                    : '',
+              },
+            ]
+          } else {
+            return [tweetMark]
+          }
+        })
+      )
     },
   },
 }
