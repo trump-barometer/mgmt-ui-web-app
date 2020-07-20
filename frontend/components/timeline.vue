@@ -56,6 +56,7 @@
           </div>
         </RecycleScroller>
         <el-button
+          v-if="moreDataAvailable"
           v-loading="loading"
           v-observe-visibility="{
             callback: loadMoreData,
@@ -65,6 +66,7 @@
             },
           }"
           class="loading-button"
+          :click="loadMoreData"
         >
           Load more
         </el-button>
@@ -109,6 +111,9 @@ export default {
     indices(): string[] {
       return Object.keys((this as any).$store.state.stock.stockData)
     },
+    moreDataAvailable(): boolean {
+      return (this as any).$store.state.stock.from > '2020-04-05T00:00:00.000Z'
+    },
     tweets(): TweetType[] {
       const tweets = (this as any).$store.state.tweets.list as TweetType[]
       if ((this as any).tweetFilter === 'Impactful') {
@@ -127,7 +132,7 @@ export default {
         tweets,
         visibleTweets
       )
-      const additionalBound = Math.max(to.diff(from) * 0.2, 20000000)
+      const additionalBound = Math.max(to.diff(from) * 0.2, 86400000)
       from = (this as any).getNextQuarter(from.subtract(additionalBound), true)
       to = (this as any).getNextQuarter(to.add(additionalBound), false)
       const fromIso = from.toISOString()
@@ -137,11 +142,10 @@ export default {
       ]
         .filter((value: any) => value.time >= fromIso && value.time <= toIso)
         .map((value: any) => [value.time, value.value])
-      /* Currently not used ad data granularity is low
       const chartVisibleTweets = tweets.filter(
         (tweet: TweetType) =>
           tweet.adjustedTime >= fromIso && tweet.adjustedTime <= toIso
-      ) */
+      )
       return {
         grid: {
           left: 80,
@@ -189,7 +193,7 @@ export default {
             data: stockData,
             markPoint: {
               data: [].concat(
-                ...visibleTweets.map((tweet: TweetType) => {
+                ...chartVisibleTweets.map((tweet: TweetType) => {
                   const tweetMark = {
                     coord: [
                       tweet.adjustedTime,

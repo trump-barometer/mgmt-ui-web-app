@@ -81,7 +81,9 @@ export default {
   name: 'Tweet',
   props: {
     item: { type: Object, required: true } as PropOptions<Tweet>,
-    index: { type: String, required: false } as PropOptions<string>,
+    index: { type: String, required: false, default: '' } as PropOptions<
+      string
+    >,
     hideId: { type: Boolean, required: false, default: false } as PropOptions<
       boolean
     >,
