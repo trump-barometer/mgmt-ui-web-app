@@ -27,10 +27,45 @@
     <div class="content">
       {{ item.text }}
     </div>
-    <div class="time" :title="getTimeStringFull(item.time)">
-      {{ getTimeString(item.time) }}
+    <div class="footer">
+      <div class="time" :title="getTimeStringFull(item.time)">
+        {{ getTimeString(item.time) }}
+      </div>
+      <template
+        v-if="
+          index &&
+            item.predictions &&
+            item.predictions.deep_learning.bert['^' + index]
+        "
+      >
+        <div class="measure">
+          Prediction
+          <span
+            :class="{
+              'el-icon-top-right':
+                item.predictions.deep_learning.bert['^' + index].result ===
+                'Up',
+              'el-icon-bottom-right':
+                item.predictions.deep_learning.bert['^' + index].result ===
+                'Down',
+            }"
+          ></span>
+        </div>
+        <div class="measure">
+          Actual
+          <span
+            :class="{
+              'el-icon-top-right':
+                item.predictions.deep_learning.bert['^' + index]
+                  .ground_truth === 'Up',
+              'el-icon-bottom-right':
+                item.predictions.deep_learning.bert['^' + index]
+                  .ground_truth === 'Down',
+            }"
+          ></span>
+        </div>
+      </template>
     </div>
-    <div class="measures"></div>
   </div>
 </template>
 
@@ -46,6 +81,7 @@ export default {
   name: 'Tweet',
   props: {
     item: { type: Object, required: true } as PropOptions<Tweet>,
+    index: { type: String, required: false } as PropOptions<string>,
     hideId: { type: Boolean, required: false, default: false } as PropOptions<
       boolean
     >,
@@ -134,8 +170,19 @@ export default {
   color: #7f828b;
 }
 
-.time {
+.footer {
+  display: flex;
+}
+
+.time,
+.measure {
   margin-top: 10px;
+}
+
+.measure::before {
+  content: '•';
+  margin: 0 10px;
+  color: #cccccc;
 }
 
 .id {

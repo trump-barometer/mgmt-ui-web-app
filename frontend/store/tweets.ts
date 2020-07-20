@@ -29,22 +29,21 @@ export const actions = {
         process.env.port
       }/tweets`,
       { params: { from, to } }
-    )) as any[])
-      .reverse()
-      .map((tweet, i) => {
-        const time = moment.utc(tweet.timestamp)
-        return {
-          id: i + 1 + offset,
-          nativeId: tweet.id,
-          text: tweet.text,
-          time,
-          adjustedTime: moment
-            .utc(time)
-            .subtract(time.minute() % 15, 'minutes')
-            .startOf('hour')
-            .toISOString(),
-        }
-      })
+    )) as any[]).map((tweet, i) => {
+      const time = moment.utc(tweet.timestamp)
+      return {
+        id: i + 1 + offset,
+        nativeId: tweet.id,
+        text: tweet.text,
+        time,
+        adjustedTime: moment
+          .utc(time)
+          .subtract(time.minute() % 15, 'minutes')
+          .startOf('hour')
+          .toISOString(),
+        predictions: tweet.predictions,
+      }
+    })
     commit('addTweets', { tweets, from, to })
   },
 }

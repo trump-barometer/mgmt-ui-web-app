@@ -19,6 +19,20 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
       req.query.indexnames = <string[]>req.query.indexnames
     }
 
+    if (!req.query.predictionmodels) {
+      req.query.predictionmodels = <string[]>[]
+    } else {
+      assert(Array.isArray(req.query.predictionmodels), 'only give arrays as predictionmodels filter')
+      req.query.predictionmodels = <string[]>req.query.predictionmodels
+    }
+
+    const backtestingprojection: any = {};
+    if (req.query.predictionmodels.length > 0) {
+      req.query.predictionmodels.forEach(model => backtestingprojection['backtesting.'+model] = 1)
+    } else {
+      backtestingprojection['backtesting']= 1;
+    }
+
 
     const result = (await mongoClient.db()
       .collection('indizes')
@@ -37,16 +51,23 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
           'indize.symbol': 1,
           'indize.high': 1,
           'indize.low': 1,
+          ...backtestingprojection
         },
       })
       .sort({ 'indize.timestamp': -1, 'indize.symbol': 1 })
       .toArray())
     res.json(
       result.map(element => {
+        Object.keys(element.backtesting).forEach(group => {
+          Object.keys(element.backtesting[group]).forEach(model => {
+            element.backtesting[group][model] = Math.round(element.backtesting[group][model] * 1000) / 1000
+          })
+        })
         return {
           index: element.indize.symbol.replace('^', ''),
           timestamp: element.indize.timestamp,
           value: Math.round((element.indize.high + element.indize.low) / 2 * 1000) / 1000,
+          backtesting: element.backtesting
         }
       }))
     next()

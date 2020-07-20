@@ -17,6 +17,7 @@ export const mutations = {
       to,
     }: { indices: { [key: string]: any[] }; from: string; to: string }
   ) {
+    state.stockData = { ...state.stockData }
     for (const [key, entries] of Object.entries(indices)) {
       state.stockData[key] = [...entries, ...(state.stockData[key] || [])]
     }
@@ -37,7 +38,7 @@ export const actions = {
       { params: { from, to } }
     )) as any[]
     const indices: { [key: string]: any[] } = {}
-    for (const point of data) {
+    for (const point of data.reverse()) {
       if (!indices[point.index]) {
         indices[point.index] = []
       }
