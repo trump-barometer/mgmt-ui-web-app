@@ -57,8 +57,18 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
     res.json(
       result
         .map(element => {
+          if (element.predictions) {
+          Object.keys(element.predictions)
+            .forEach(modelClass => Object.keys(element.predictions[modelClass])
+              .forEach(modelName => Object.keys(element.predictions[modelClass][modelName])
+                .forEach(index => {
+                  element.predictions[modelClass][modelName][index.replace('^','')] =
+                    element.predictions[modelClass][modelName][index];
+                  delete element.predictions[modelClass][modelName][index];
+                })))
+          }
           return {
-            timestamp: moment.utc(element.tweet.created_at, 'ddd MMM DD HH:mm:ss Z YYYY'),
+            timestamp: moment.utc(element.tweet.created_at, moment.RFC_2822),
             id: element.tweet.id,
             text: element.tweet.full_text,
             favoriteCount: element.tweet.favorite_count,
@@ -113,7 +123,7 @@ router.get('/timestamps', async (req: EnhancedRequest, res: Response, next: Next
     const result = await mongoClient.db().collection('tweets')
       .distinct('tweet.created_at')
     res.json(result
-      .map(element => moment.utc(element, 'ddd MMM DD HH:mm:ss Z YYYY'))
+      .map(element => moment.utc(element, moment.RFC_2822))
       .sort((a, b) => a.isAfter(b) ? -1 : 1)
       .map(element => element.toISOString()),
     )
