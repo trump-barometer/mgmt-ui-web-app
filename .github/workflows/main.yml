@@ -25,6 +25,11 @@ jobs:
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
         script: |
+          whoami
+          who
+          w
+          npm -v
+          node -v
           cd ~/webserver/mgmt-ui-web-app
           git fetch --all
           git reset --hard origin/master
