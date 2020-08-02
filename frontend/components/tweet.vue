@@ -35,7 +35,8 @@
         v-if="
           index &&
             item.predictions &&
-            item.predictions.deep_learning.bert['^' + index]
+            item.predictions.deep_learning.bert &&
+            item.predictions.deep_learning.bert[index]
         "
       >
         <div class="measure">
@@ -43,11 +44,9 @@
           <span
             :class="{
               'el-icon-top-right':
-                item.predictions.deep_learning.bert['^' + index].result ===
-                'Up',
+                item.predictions.deep_learning.bert[index].result === 'Up',
               'el-icon-bottom-right':
-                item.predictions.deep_learning.bert['^' + index].result ===
-                'Down',
+                item.predictions.deep_learning.bert[index].result === 'Down',
             }"
           ></span>
         </div>
@@ -56,11 +55,11 @@
           <span
             :class="{
               'el-icon-top-right':
-                item.predictions.deep_learning.bert['^' + index]
-                  .ground_truth === 'Up',
+                item.predictions.deep_learning.bert[index].ground_truth ===
+                'Up',
               'el-icon-bottom-right':
-                item.predictions.deep_learning.bert['^' + index]
-                  .ground_truth === 'Down',
+                item.predictions.deep_learning.bert[index].ground_truth ===
+                'Down',
             }"
           ></span>
         </div>

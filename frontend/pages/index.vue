@@ -2,9 +2,7 @@
   <el-container>
     <trump-hero />
     <timeline />
-    <el-footer>
-      Footer
-    </el-footer>
+    <el-footer></el-footer>
   </el-container>
 </template>
 

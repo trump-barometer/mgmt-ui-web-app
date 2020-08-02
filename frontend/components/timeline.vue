@@ -127,8 +127,8 @@ export default {
         return tweets.filter((tweet) => {
           const prediction =
             // eslint-disable-next-line camelcase
-            tweet.predictions?.deep_learning?.bert[
-              '^' + (this as any).selectedIndice
+            tweet.predictions?.deep_learning?.bert?.[
+              (this as any).selectedIndice
             ]
           if (!prediction) {
             return false
@@ -263,7 +263,8 @@ export default {
             markPoint: {
               data: (this as any).generateTweetMarks(
                 chartVisibleTweets,
-                chartStockData
+                chartStockData,
+                (this as any).selectedIndice
               ),
             },
             lineStyle: {
@@ -318,16 +319,16 @@ export default {
       if (!visibleTweets.length) {
         if (tweets.length) {
           return [
-            moment(tweets[tweets.length - 1].time),
-            moment(tweets[0].time),
+            moment(tweets[tweets.length - 1].adjustedTime),
+            moment(tweets[0].adjustedTime),
           ]
         } else {
           return [moment(), moment()]
         }
       }
       return [
-        moment.utc(visibleTweets[0].time),
-        moment.utc(visibleTweets[visibleTweets.length - 1].time),
+        moment.utc(visibleTweets[0].adjustedTime),
+        moment.utc(visibleTweets[visibleTweets.length - 1].adjustedTime),
       ]
     },
     getNextQuarter(time: Moment, preferEarly: boolean) {
@@ -360,16 +361,22 @@ export default {
     },
     generateTweetMarks(
       tweets: TweetType[],
-      stockData: [string, number][]
+      stockData: [string, number][],
+      selectedIndice: string
     ): any[] {
       interface TweetTypeReduced extends TweetType {
         sameTimeUntilId?: string
-        prediction: number
+        prediction: number | null
       }
-      const adjustedTweets: TweetTypeReduced[] = tweets.map((tweet) => ({
-        ...tweet,
-        prediction: 0,
-      }))
+      const adjustedTweets: TweetTypeReduced[] = tweets.map((tweet) => {
+        const prediction =
+          // eslint-disable-next-line camelcase
+          tweet.predictions?.deep_learning?.bert?.[selectedIndice]?.result
+        return {
+          ...tweet,
+          prediction: prediction ? (prediction === 'Up' ? 1 : -1) : 0,
+        }
+      })
       const reducedTweets = adjustedTweets.reduce<TweetTypeReduced[]>(
         (list, tweet) => {
           const sameAdjustedTimeTweet = list.find(
@@ -378,7 +385,12 @@ export default {
           if (sameAdjustedTimeTweet) {
             return list.map((reducedTweet) =>
               reducedTweet === sameAdjustedTimeTweet
-                ? { ...reducedTweet, sameTimeUntilId: tweet.id }
+                ? {
+                    ...reducedTweet,
+                    sameTimeUntilId: tweet.id,
+                    prediction:
+                      (reducedTweet.prediction || 0) + (tweet.prediction || 0),
+                  }
                 : reducedTweet
             )
           } else {
@@ -398,7 +410,7 @@ export default {
               ? `${tweet.id}-${tweet.sameTimeUntilId}`
               : tweet.id,
           }
-          if (tweet.predictions) {
+          if (tweet.prediction) {
             return [
               tweetMark,
               {
@@ -416,12 +428,7 @@ export default {
                   fontFamily: 'element-icons',
                   color: '#333333',
                 },
-                value:
-                  tweet.predictions.deep_learning?.bert?.[
-                    '^' + (this as any).selectedIndice
-                  ]?.result === 'Up'
-                    ? ''
-                    : '',
+                value: tweet.prediction > 0 ? '' : '',
               },
             ]
           } else {
@@ -520,5 +527,17 @@ h1 {
 .echarts {
   width: 100%;
   height: calc(100% - 200px);
+}
+
+@media (max-width: 1023px) {
+  .split {
+    flex-direction: column;
+  }
+
+  .chart {
+    margin: 0;
+    bottom: 0;
+    top: initial;
+  }
 }
 </style>
