@@ -109,6 +109,7 @@ export default {
       tweetFilter: 'All tweets',
       selectedIndice: 'NDX',
       loading: false,
+      width: typeof window === 'undefined' ? 0 : window.innerWidth,
     }
   },
   computed: {
@@ -179,8 +180,21 @@ export default {
         tooltip: {
           trigger: 'axis',
         },
+        grid:
+          (this as any).width < 1024
+            ? {
+                top: 40,
+                left: 15,
+                right: 16,
+                bottom: 1,
+              }
+            : {},
+        legend: {
+          show: true,
+        },
         xAxis: {
           type: 'category',
+          show: (this as any).width >= 1024,
           axisLabel: {
             formatter: (value: string) =>
               moment.utc(value).format('YYYY-MM-DD HH:mm'),
@@ -199,6 +213,7 @@ export default {
         yAxis: [
           {
             type: 'value',
+            show: (this as any).width >= 1024,
             name: (this as any).selectedIndice,
             axisLabel: {
               formatter: '{value}',
@@ -216,6 +231,7 @@ export default {
           {
             type: 'value',
             name: 'Virtual Invest',
+            show: (this as any).width >= 1024,
             axisLabel: {
               formatter: '{value} $',
             },
@@ -290,7 +306,23 @@ export default {
       }
     },
   },
+  mounted() {
+    ;(this as any).$nextTick(() => {
+      if (window) {
+        window.addEventListener('resize', (this as any).onResize)
+      }
+    })
+  },
+
+  beforeDestroy() {
+    if (window) {
+      window.removeEventListener('resize', (this as any).onResize)
+    }
+  },
   methods: {
+    onResize() {
+      ;(this as any).width = window.innerWidth
+    },
     visibilityChanged(visible: boolean, entry: any): void {
       visible
         ? entry.target.classList.remove('hidden')
@@ -530,6 +562,21 @@ h1 {
 }
 
 @media (max-width: 1023px) {
+  .title-bar {
+    flex-direction: column;
+    overflow-x: hidden;
+    margin: -20px -20px 0;
+    padding: 40px 20px;
+  }
+
+  .el-radio-group {
+    display: flex;
+    overflow-x: auto;
+    max-width: calc(100% + 40px);
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
   .split {
     flex-direction: column;
   }
@@ -538,6 +585,13 @@ h1 {
     margin: 0;
     bottom: 0;
     top: initial;
+    box-shadow: 0 -5px 5px 5px rgba(255, 255, 255, 0.9);
+  }
+
+  .echarts {
+    width: 100%;
+    height: 200px;
+    background: rgba(255, 255, 255, 0.9);
   }
 }
 </style>

@@ -47,4 +47,10 @@ header {
 .el-container {
   min-height: 100vh;
 }
+
+@media (max-width: 1023px) {
+  .tile {
+    padding: 40px 20px;
+  }
+}
 </style>
