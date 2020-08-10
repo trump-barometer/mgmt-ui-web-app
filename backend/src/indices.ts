@@ -37,22 +37,28 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
     const result = (await mongoClient.db()
       .collection('indizes')
       .find(
-        req.query.indexnames.length > 0 ?
-          {
-            '$or': req.query.indexnames.map(indexname => {
-              return { 'indize.symbol': '^' + indexname }
-            }),
-          } : {}
+        {
+          '$and': [
+            req.query.from ? { 'indize.timestamp_date': { '$gte': moment.utc(<string>req.query.from).toDate() } } : {},
+            req.query.to ? { 'indize.timestamp_date': { '$lt': moment.utc(<string>req.query.to).toDate() } } : {},
+            req.query.indexnames.length > 0 ?
+              {
+                '$or': req.query.indexnames.map(indexname => {
+                  return { 'indize.symbol': '^' + indexname }
+                }),
+              } : {},
+          ],
+        }
         , {
           projection: {
-            'indize.timestamp': 1,
+            'indize.timestamp_date': 1,
             'indize.symbol': 1,
             'indize.high': 1,
             'indize.low': 1,
             ...backtestingprojection,
           },
         })
-      .sort({ 'indize.timestamp': -1, 'indize.symbol': 1 })
+      .sort({ 'indize.timestamp_date': -1, 'indize.symbol': 1 })
       .toArray())
     res.json(
       result.map(element => {
@@ -65,20 +71,16 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
         }
         return {
           index: element.indize.symbol.replace('^', ''),
-          timestamp: moment.utc(element.indize.timestamp, moment.RFC_2822),
+          timestamp: element.indize.timestamp_date,
           value: Math.round((parseFloat(element.indize.high) + parseFloat(element.indize.low)) / 2 * 1000) / 1000,
           backtesting: element.backtesting,
         }
       })
-        .filter(element =>
-          (!req.query.from || moment.utc(<string>req.query.from).isSameOrBefore(element.timestamp))
-          && (!req.query.to || moment.utc(<string>req.query.to).isAfter(element.timestamp)),
-        ))
+    )
     next()
   } catch (e) {
-    /*    res.json(e.message)
-        next()*/
-    throw e
+        res.json(e.message)
+        next()
   }
 })
 
@@ -86,11 +88,13 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
 router.get('/indexnames', async (req: EnhancedRequest, res: Response, next: NextFunction) => {
   const mongoClient = req.dbClient.mongoClient
   try {
-    const result = (await mongoClient.db()
+    const result = await mongoClient.db()
       .collection('indizes')
-      .distinct('indize.symbol'))
-      .sort()
-    res.json(result.map(element => element.replace('^', '')))
+      .distinct('indize.symbol')
+
+    res.json(result
+      .map(element => element.replace('^', ''))
+      .sort())
     next()
   } catch (e) {
     res.json(e)

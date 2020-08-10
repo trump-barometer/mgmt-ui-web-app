@@ -29,6 +29,8 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
     const result = await mongoClient.db().collection('tweets')
       .find({
         '$and': [
+          req.query.from ? { 'tweet.created_at_date': { '$gte': moment.utc(<string>req.query.from).toDate() } } : {},
+          req.query.to ? { 'tweet.created_at_date': { '$lt': moment.utc(<string>req.query.to).toDate() } } : {},
           {
             '$or': [
               { 'tweet.entities.media': null },
@@ -45,7 +47,7 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
         ],
       }, {
         projection: {
-          'tweet.created_at': 1,
+          'tweet.created_at_date': 1,
           'tweet.full_text': 1,
           'tweet.id': 1,
           'tweet.favorite_count': 1,
@@ -53,6 +55,7 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
           ...predictionprojection
         },
       })
+      .sort({ 'tweet.created_at_date': -1})
       .toArray();
     res.json(
       result
@@ -68,7 +71,7 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
                 })))
           }
           return {
-            timestamp: moment.utc(element.tweet.created_at, moment.RFC_2822),
+            timestamp: element.tweet.created_at_date,
             id: element.tweet.id,
             text: element.tweet.full_text,
             favoriteCount: element.tweet.favorite_count,
@@ -76,11 +79,6 @@ router.get('/', async (req: EnhancedRequest, res: Response, next: NextFunction) 
             predictions: element.predictions
           }
         })
-        .filter(element =>
-            (!req.query.from || moment.utc(<string> req.query.from).isSameOrBefore(element.timestamp))
-              && (!req.query.to || moment.utc(<string> req.query.to).isAfter(element.timestamp))
-        )
-        .sort((a, b) => a.timestamp.isAfter(b.timestamp) ? -1 : 1),
     )
     next()
   } catch (e) {
@@ -121,12 +119,11 @@ router.get('/timestamps', async (req: EnhancedRequest, res: Response, next: Next
   const mongoClient = req.dbClient.mongoClient
   try {
     const result = await mongoClient.db().collection('tweets')
-      .distinct('tweet.created_at')
+      .distinct('tweet.created_at_date')
     res.json(result
-      .map(element => moment.utc(element, moment.RFC_2822))
-      .sort((a, b) => a.isAfter(b) ? -1 : 1)
-      .map(element => element.toISOString()),
-    )
+      .map(element => moment.utc(element))
+      .sort((a, b) => a.isSameOrBefore(b) ? 1 : -1)
+      .map(element => element.toISOString()))
     next()
   } catch (e) {
     res.json(e)
