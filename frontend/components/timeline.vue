@@ -53,7 +53,12 @@
           @update="setVisibleTweets"
         >
           <div>
-            <Tweet :item="item" :index="selectedIndice"></Tweet>
+            <Tweet
+              :item="item"
+              :index="selectedIndice"
+              :algorithm="algorithm"
+              :learning-type="learningType"
+            ></Tweet>
           </div>
         </RecycleScroller>
         <el-button
@@ -110,6 +115,8 @@ export default {
       selectedIndice: 'NDX',
       loading: false,
       width: typeof window === 'undefined' ? 0 : window.innerWidth,
+      learningType: 'deep_learning',
+      algorithm: 'bert',
     }
   },
   computed: {
@@ -122,15 +129,16 @@ export default {
     tweets(): TweetType[] {
       const tweets = (this as any).$store.state.tweets.list as TweetType[]
       const tweetFilter = (this as any).tweetFilter
+      const learningType = (this as any).learning_type as string
+      const algorithm = (this as any).algorithm as string
+      const selectedIndice = (this as any).selectedIndice as string
       if (tweetFilter === 'All tweets') {
         return tweets
       } else {
         return tweets.filter((tweet) => {
           const prediction =
             // eslint-disable-next-line camelcase
-            tweet.predictions?.deep_learning?.bert?.[
-              (this as any).selectedIndice
-            ]
+            tweet.predictions?.[learningType]?.[algorithm]?.[selectedIndice]
           if (!prediction) {
             return false
           }
@@ -170,8 +178,14 @@ export default {
         value.value,
       ])
       const chartBacktestingData = filteredStockData
-        .filter((value) => typeof value.backtesting.bert === 'number')
-        .map((value: any) => [value.time, value.backtesting.bert])
+        .filter(
+          (value) =>
+            typeof value.backtesting?.[(this as any).algorithm] === 'number'
+        )
+        .map((value: any) => [
+          value.time,
+          value.backtesting?.[(this as any).algorithm],
+        ])
       const chartVisibleTweets = tweets.filter(
         (tweet: TweetType) =>
           tweet.adjustedTime >= fromIso && tweet.adjustedTime <= toIso
@@ -403,7 +417,9 @@ export default {
       const adjustedTweets: TweetTypeReduced[] = tweets.map((tweet) => {
         const prediction =
           // eslint-disable-next-line camelcase
-          tweet.predictions?.deep_learning?.bert?.[selectedIndice]?.result
+          tweet.predictions?.[(this as any).learning_type]?.[
+            (this as any).algorithm
+          ]?.[selectedIndice]?.result
         return {
           ...tweet,
           prediction: prediction ? (prediction === 'Up' ? 1 : -1) : 0,

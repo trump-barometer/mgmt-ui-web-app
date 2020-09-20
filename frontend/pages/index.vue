@@ -1,20 +1,24 @@
 <template>
-  <el-container>
-    <trump-hero />
-    <timeline />
-    <el-footer></el-footer>
-  </el-container>
+  <div>
+    <el-container>
+      <trump-hero />
+      <timeline />
+    </el-container>
+    <impress />
+  </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import TrumpHero from '~/components/trump-hero.vue'
 import Timeline from '~/components/timeline.vue'
+import Impress from '~/components/impress.vue'
 
 export default Vue.extend({
   components: {
     Timeline,
     TrumpHero,
+    Impress,
   },
   middleware: 'fill-data',
 })
@@ -45,7 +49,7 @@ header {
 }
 
 .el-container {
-  min-height: 100vh;
+  display: block !important;
 }
 
 @media (max-width: 1023px) {

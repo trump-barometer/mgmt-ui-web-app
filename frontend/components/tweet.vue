@@ -35,8 +35,9 @@
         v-if="
           index &&
             item.predictions &&
-            item.predictions.deep_learning.bert &&
-            item.predictions.deep_learning.bert[index]
+            item.predictions[learningType] &&
+            item.predictions[learningType][algorithm] &&
+            item.predictions[learningType][algorithm][index]
         "
       >
         <div class="measure">
@@ -44,22 +45,25 @@
           <span
             :class="{
               'el-icon-top-right':
-                item.predictions.deep_learning.bert[index].result === 'Up',
+                item.predictions[learningType][algorithm][index].result ===
+                'Up',
               'el-icon-bottom-right':
-                item.predictions.deep_learning.bert[index].result === 'Down',
+                item.predictions[learningType][algorithm][index].result ===
+                'Down',
             }"
           ></span>
         </div>
         <div class="measure">
           Actual
           <span
+            v-if="item.predictions[learningType][algorithm][index].ground_truth"
             :class="{
               'el-icon-top-right':
-                item.predictions.deep_learning.bert[index].ground_truth ===
-                'Up',
+                item.predictions[learningType][algorithm][index]
+                  .ground_truth === 'Up',
               'el-icon-bottom-right':
-                item.predictions.deep_learning.bert[index].ground_truth ===
-                'Down',
+                item.predictions[learningType][algorithm][index]
+                  .ground_truth === 'Down',
             }"
           ></span>
         </div>
@@ -81,6 +85,12 @@ export default {
   props: {
     item: { type: Object, required: true } as PropOptions<Tweet>,
     index: { type: String, required: false, default: '' } as PropOptions<
+      string
+    >,
+    learningType: { type: String, required: false, default: '' } as PropOptions<
+      string
+    >,
+    algorithm: { type: String, required: false, default: '' } as PropOptions<
       string
     >,
     hideId: { type: Boolean, required: false, default: false } as PropOptions<

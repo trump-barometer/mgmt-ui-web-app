@@ -2,7 +2,7 @@ export interface PredictionResult {
   probability: number
   result: 'Up' | 'Down'
   // eslint-disable-next-line camelcase
-  ground_truth: 'Up' | 'Down'
+  ground_truth?: 'Up' | 'Down'
 }
 
 export interface Tweet {
@@ -12,9 +12,8 @@ export interface Tweet {
   id: string
   impactful: boolean
   predictions: {
-    // eslint-disable-next-line camelcase
-    deep_learning: {
-      bert: { [key: string]: PredictionResult }
+    [key: string]: {
+      [key: string]: { [key: string]: PredictionResult }
     }
   }
 }
